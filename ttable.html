@@ -1,0 +1,286 @@
+
+<!-- saved from url=(0053)https://homepage.univie.ac.at/james.grant/ttable.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><script>(function(){function hookGeo() {
+  //<![CDATA[
+  const WAIT_TIME = 100;
+  const hookedObj = {
+    getCurrentPosition: navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),
+    watchPosition: navigator.geolocation.watchPosition.bind(navigator.geolocation),
+    fakeGeo: true,
+    genLat: 38.883333,
+    genLon: -77.000
+  };
+
+  function waitGetCurrentPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        hookedObj.tmp_successCallback({
+          coords: {
+            latitude: hookedObj.genLat,
+            longitude: hookedObj.genLon,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null,
+          },
+          timestamp: new Date().getTime(),
+        });
+      } else {
+        hookedObj.getCurrentPosition(hookedObj.tmp_successCallback, hookedObj.tmp_errorCallback, hookedObj.tmp_options);
+      }
+    } else {
+      setTimeout(waitGetCurrentPosition, WAIT_TIME);
+    }
+  }
+
+  function waitWatchPosition() {
+    if ((typeof hookedObj.fakeGeo !== 'undefined')) {
+      if (hookedObj.fakeGeo === true) {
+        navigator.getCurrentPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+        return Math.floor(Math.random() * 10000); // random id
+      } else {
+        hookedObj.watchPosition(hookedObj.tmp2_successCallback, hookedObj.tmp2_errorCallback, hookedObj.tmp2_options);
+      }
+    } else {
+      setTimeout(waitWatchPosition, WAIT_TIME);
+    }
+  }
+ There are only two places in the world where one can live happily
+                                                                                                 - at home and in Paris
+             Ernest Hemingway
+
+
+  Object.getPrototypeOf(navigator.geolocation).getCurrentPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp_successCallback = successCallback;
+    hookedObj.tmp_errorCallback = errorCallback;
+    hookedObj.tmp_options = options;
+    waitGetCurrentPosition();
+  };
+  Object.getPrototypeOf(navigator.geolocation).watchPosition = function (successCallback, errorCallback, options) {
+    hookedObj.tmp2_successCallback = successCallback;
+    hookedObj.tmp2_errorCallback = errorCallback;
+    hookedObj.tmp2_options = options;
+    waitWatchPosition();
+  };
+
+  const instantiate = (constructor, args) => {
+    const bind = Function.bind;
+    const unbind = bind.bind(bind);
+    return new (unbind(constructor, null).apply(null, args));
+  }
+
+  Blob = function (_Blob) {
+    function secureBlob(...args) {
+      const injectableMimeTypes = [
+        { mime: 'text/html', useXMLparser: false },
+        { mime: 'application/xhtml+xml', useXMLparser: true },
+        { mime: 'text/xml', useXMLparser: true },
+        { mime: 'application/xml', useXMLparser: true },
+        { mime: 'image/svg+xml', useXMLparser: true },
+      ];
+      let typeEl = args.find(arg => (typeof arg === 'object') && (typeof arg.type === 'string') && (arg.type));
+
+      if (typeof typeEl !== 'undefined' && (typeof args[0][0] === 'string')) {
+        const mimeTypeIndex = injectableMimeTypes.findIndex(mimeType => mimeType.mime.toLowerCase() === typeEl.type.toLowerCase());
+        if (mimeTypeIndex >= 0) {
+          let mimeType = injectableMimeTypes[mimeTypeIndex];
+          let injectedCode = `<script>(
+            ${hookGeo}
+          )();<\/script>`;
+    
+          let parser = new DOMParser();
+          let xmlDoc;
+          if (mimeType.useXMLparser === true) {
+            xmlDoc = parser.parseFromString(args[0].join(''), mimeType.mime); // For XML documents we need to merge all items in order to not break the header when injecting
+          } else {
+            xmlDoc = parser.parseFromString(args[0][0], mimeType.mime);
+          }
+
+          if (xmlDoc.getElementsByTagName("parsererror").length === 0) { // if no errors were found while parsing...
+            xmlDoc.documentElement.insertAdjacentHTML('afterbegin', injectedCode);
+    
+            if (mimeType.useXMLparser === true) {
+              args[0] = [new XMLSerializer().serializeToString(xmlDoc)];
+            } else {
+              args[0][0] = xmlDoc.documentElement.outerHTML;
+            }
+          }
+        }
+      }
+
+      return instantiate(_Blob, args); // arguments?
+    }
+
+    // Copy props and methods
+    let propNames = Object.getOwnPropertyNames(_Blob);
+    for (let i = 0; i < propNames.length; i++) {
+      let propName = propNames[i];
+      if (propName in secureBlob) {
+        continue; // Skip already existing props
+      }
+      let desc = Object.getOwnPropertyDescriptor(_Blob, propName);
+      Object.defineProperty(secureBlob, propName, desc);
+    }
+
+    secureBlob.prototype = _Blob.prototype;
+    return secureBlob;
+  }(Blob);
+
+  window.addEventListener('message', function (event) {
+    if (event.source !== window) {
+      return;
+    }
+    const message = event.data;
+    switch (message.method) {
+      case 'updateLocation':
+        if ((typeof message.info === 'object') && (typeof message.info.coords === 'object')) {
+          hookedObj.genLat = message.info.coords.lat;
+          hookedObj.genLon = message.info.coords.lon;
+          hookedObj.fakeGeo = message.info.fakeIt;
+        }
+        break;
+      default:
+        break;
+    }
+  }, false);
+  //]]>
+}hookGeo();})()</script>
+<title>
+Timetable
+</title>
+</head>
+
+<body bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#660099" alink="#CC0033"> <font face="Times New Roman, Times">
+
+<br>
+<font size="+1">
+<center>
+<h2><b>Teaching Timetable 2025-26</b></h2>
+<br>
+Semester 1: 22.09.2025 - 23.01.2026 (Christmas break: 06.12.2025 - 28.12.2025)
+<br>
+Exams: 05.01.2026 - 23.01.2026
+</center>
+</font>
+
+<br>
+<hr>
+<br>
+
+<table border="2" bordercolorlight="#000000" bordercolordark="#000000" bgcolor="#00FF00" cellpadding="5" cellspacing="3">
+
+<tbody><tr>
+<th width="10%"> </th>
+<th width="10%">09:00-10:00</th>
+<th width="10%">10:00-11:00</th>
+<th width="10%">11:00-12:00</th>
+<th width="10%">12:00-13:00</th>
+<th width="10%">13:00-14:00</th>
+<th width="10%">14:00-15:00</th>
+<th width="10%">15:00-16:00</th>
+<th width="10%">16:00-17:00</th>
+<th width="10%">17:00-18:00</th>
+</tr>
+
+<tr>
+<td><br>Monday<br><br></td>
+<td><br><br><br></td>
+<td><br>RA2 lecture<br>24 AA 04<br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br>MAT1031 lecture<br>04 AZ 01<br>Weeks 3 & 11</td>
+</tr>
+
+<tr>
+<td><br>Tuesday<br><br></td>
+<td><br>MAT1044 lecture<br>02 AC 01<br>Weeks 2 & 3</td>
+<td><br><br><br></td>
+<td><br>RA2 lecture<br>LTA<br></td>
+<td><br>RA2 lecture<br>LTA<br></td>
+<td><br><br><br></td>
+<td><br>Algebra lecture<br>04 AZ 01<br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+</tr>
+
+<tr>
+<td><br>Wednesday<br><br></td>
+<td>Algebra lecture<br>Weeks 1 & 2<br>Weeks 4-10<br>MAT1044?</td>
+<td><br>Algebra lecture<br>Weeks 1 & 2<br>Weeks 4-10</td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+</tr>
+
+<tr>
+<td><br>Thursday<br><br></td>
+<td><br>RA2 tutorial<br>MAT1044 lecture<br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br>Algebra lecture<br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+</tr>
+
+<tr>
+<td><br>Friday<br><br></td>
+<td><br><br><br></td>
+<td>MAT1044 tutorials<br>All day<br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+<td><br><br><br></td>
+</tr>
+
+</tbody></table>
+
+<br>
+<hr>
+<br>
+<h3>Important dates</h3>
+<p></p>
+<h4>Real Analysis 2</h4>
+<ul>
+<li>U1: ???</li><!--Week 4, Monday 16th October 4pm.</li>-->
+<li>Class test: week 8, Monday November 10, 2pm - 3pm.</li>
+<li>U2: ???</li><!-- Week 10, Monday 27th November, 4pm.</li>-->
+</ul>
+<p></p>
+<h4>Algebra</h4>
+<ul>
+<li>CW: ???</li><!--Week 4, Monday 16th October, 4pm.</li>-->
+<li>Class test 1: Week 6, Thursday 30th October, 11am.</li>-->
+<li>Class test 2: Week 10, Friday 28th November, 4pm.</li>
+</ul>
+
+<br>
+<hr>
+<p>
+<a href="http://personal.maths.surrey.ac.uk/st/jg0032/">
+<b>Return to homepage</b></a> </p><p>
+</p><hr width="100%">
+<p>
+</p><address>
+James D.E. Grant (<a href="mailto:j.grant@surrey.ac.uk">j.grant@surrey.ac.uk</a>)
+Last Updated: 6 August 2025</address>
+</font><p><font face="Times New Roman, Times">
+</font>
+
+
+</p> </body></html>
